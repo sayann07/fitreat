@@ -1,0 +1,52 @@
+service: fitreatproject
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  profile: serverlessFitreat
+  region: us-east-1
+  stage: dev
+  environment:
+      bucketName: ${self:custom.bucketName}
+      imageUploadBucket: ${self:custom.imageUploadBucket}
+  iamRoleStatements:
+    - Effect: Allow
+      Action: 
+          - s3:*
+          - ses:*
+      Resource: '*'
+
+plugins:
+    - serverless-webpack
+
+package: 
+    individually: true
+
+resources:
+  Resources:
+    DemoBucketUpload:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: myserverlessprojectuploadbuckettestfitreat
+    ImageUploadBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.imageUploadBucket}
+        AccessControl: PublicRead
+
+custom:
+    imageUploadBucket: fitreat-ai-image-upload-bucket
+
+functions:
+  hello:
+    handler: handler.hello
+  
+  imageUpload:
+    handler: lambdas/endpoints/imageUpload.handler
+    events:
+      - http:
+            path: image-upload
+            method: POST
+            cors: true
